@@ -45,7 +45,7 @@ thrusters = {
 
 main_thruster = cylinder(pos=vector(-2.0, 0.0, 0.0), axis=vector(-0.2, 0, 0), radius=1)
 sat = compound([sat_body, solar_panel, main_thruster, t_thruster, b_thruster, r_thruster, l_thruster],
-               pos=vector(0, 0, 0), make_trail=True)
+               origin=vector(0,0,0), make_trail=True)
 
 tarr = [
     arrow(pos=t_thruster.pos, axis=1.0 * vector(1.0, 0.0, 0.0), color=flame_color, visible=False),
@@ -198,12 +198,13 @@ wt = wtext(text='')
 
 
 def setthrust(s):
-    wt.text = '                Thrust: {:1.2f}'.format(s.value)
+    wt.text = '                Thrust: {:1.2f}'.format(thrust_sl.value)
+    client_socket.send(f"dyn.satellite.main_engine.on = {thrust_ck.checked} \n".encode())
+    client_socket.send(f"dyn.satellite.main_engine.thrust[0] = {thrust_sl.value} \n".encode())
 
 
-thrust_sl = slider(min=0.0, max=500.0, value=100.0, length=220, bind=setthrust)
-
-setthrust(thrust_sl)
+thrust_sl = slider(min=0.0, max=1000.0, value=1000.0, length=220, bind=setthrust)
+thrust_ck = checkbox(bind=setthrust, text='Enable Main Engine')
 
 scene.append_to_caption('\n                ')
 scene.append_to_caption('         ')
@@ -274,6 +275,8 @@ scene.append_to_caption('X-\n\n')
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect(("localhost", trick_varserver_port))
 insock = client_socket.makefile("r")
+
+setthrust(thrust_sl)
 
 client_socket.send(b"trick.var_pause()\n")
 
